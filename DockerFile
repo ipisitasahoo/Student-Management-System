@@ -1,22 +1,22 @@
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /app
+WORKDIR /src
 
 # Copy csproj and restore dependencies
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy the rest of the files and publish
+# Copy all files and publish
 COPY . ./
-RUN dotnet publish -c Release -o /publish
+RUN dotnet publish -c Release -o /app/publish
 
 # Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
-COPY --from=build /publish .
+COPY --from=build /app/publish .
 
-# Expose port (Render uses 10000+ dynamically, so expose a common port)
+# Expose a standard port
 EXPOSE 5000
 
-# Start the app
+# Automatically apply migrations on startup
 ENTRYPOINT ["dotnet", "StudentManagement.dll"]
